@@ -547,40 +547,160 @@ class RecommendationEngine:
         return keywords if keywords else ['food']
     
     def _get_food_image_url(self, keyword: str, offset: int = 0) -> str:
-        """根据关键词获取美食图片URL（使用Unsplash）"""
-        # 美食相关的Unsplash图片ID映射（基于关键词）
-        food_image_map = {
-            '麻婆豆腐': ['1565299624946-b28f40a0ae38', '1563379091339-03246963d19a'],
-            '水煮鱼': ['1555939594-58d7cb561ad1', '1567620905732-2d1ec7ab7445'],
-            '宫保鸡丁': ['1565299624946-b28f40a0ae38', '1555939594-58d7cb561ad1'],
-            '烤肉': ['1574781336247-1ba0b31921af', '1558030006-4507d4783a7c'],
-            '烤鸭': ['1585036156179-8a1c6a9c3c8a', '1567423387842-d6813a71bfa9'],
-            '火锅': ['1585937421922-0c7881b2b1e9', '1574781336247-1ba0b31921af'],
-            '拉面': ['1565299624946-b28f40a0ae38', '1555939594-58d7cb561ad1'],
-            '披萨': ['1567620905732-2d1ec7ab7445', '1555939594-58d7cb561ad1'],
-            '牛排': ['1565299624946-b28f40a0ae38', '1555939594-58d7cb561ad1'],
-            '饺子': ['1563379091339-03246963d19a', '1565299624946-b28f40a0ae38'],
-            '小笼包': ['1555939594-58d7cb561ad1', '1567620905732-2d1ec7ab7445'],
-            '麻辣烫': ['1563379091339-03246963d19a', '1555939594-58d7cb561ad1'],
-            '烤': ['1574781336247-1ba0b31921af', '1558030006-4507d4783a7c'],
-            '韩式烤肉': ['1574781336247-1ba0b31921af', '1558030006-4507d4783a7c'],
-            '北京烤鸭': ['1585036156179-8a1c6a9c3c8a', '1567423387842-d6813a71bfa9'],
+        """根据关键词获取美食图片URL（使用Unsplash Source API）"""
+        # 使用Unsplash Source API根据关键词动态获取图片
+        # 格式: https://source.unsplash.com/400x300/?keyword
+        
+        keyword_lower = keyword.lower()
+        
+        # 关键词映射到英文搜索词（用于Unsplash搜索）
+        keyword_mapping = {
+            # 火锅相关
+            '火锅': 'hotpot',
+            '毛肚': 'hotpot',
+            '虾滑': 'hotpot',
+            '牛肉片': 'hotpot',
+            '海底捞': 'hotpot',
+            '小龙坎': 'hotpot',
+            '大龙燚': 'hotpot',
+            '呷哺呷哺': 'hotpot',
+            '小肥羊': 'hotpot',
+            '麻辣牛肉': 'hotpot',
+            '鸭肠': 'hotpot',
+            '脑花': 'hotpot',
+            '黄喉': 'hotpot',
+            '肥牛': 'hotpot',
+            '蔬菜拼盘': 'hotpot',
+            '羊肉片': 'hotpot',
+            '羊蝎子': 'hotpot',
+            '手切羊肉': 'hotpot',
+            
+            # 烧烤相关
+            '烧烤': 'barbecue',
+            '烤肉': 'barbecue',
+            '烤串': 'barbecue',
+            '韩式烤肉': 'korean-barbecue',
+            '羊肉串': 'barbecue',
+            '烤': 'barbecue',
+            '石锅拌饭': 'korean-food',
+            '泡菜汤': 'korean-food',
+            
+            # 烤鸭相关
+            '烤鸭': 'peking-duck',
+            '北京烤鸭': 'peking-duck',
+            '焖炉烤鸭': 'peking-duck',
+            '鸭架汤': 'peking-duck',
+            '京酱肉丝': 'chinese-food',
+            
+            # 川菜
+            '麻婆豆腐': 'mapo-tofu',
+            '水煮鱼': 'sichuan-fish',
+            '宫保鸡丁': 'kung-pao-chicken',
+            '麻辣香锅': 'spicy-hot-pot',
+            '麻辣烫': 'spicy-soup',
+            '干锅牛蛙': 'spicy-food',
+            
+            # 面食
+            '拉面': 'ramen',
+            '牛肉拉面': 'beef-noodles',
+            '羊肉拉面': 'lamb-noodles',
+            '重庆小面': 'chongqing-noodles',
+            '豌杂面': 'noodles',
+            '红油抄手': 'wonton',
+            '米线': 'rice-noodles',
+            '过桥米线': 'rice-noodles',
+            '酸辣米线': 'spicy-noodles',
+            '凉拌牛肉': 'beef',
+            
+            # 饺子包子
+            '饺子': 'dumplings',
+            '包子': 'steamed-buns',
+            '小笼包': 'xiaolongbao',
+            '生煎包': 'pan-fried-buns',
+            '扁肉': 'wonton',
+            '拌面': 'noodles',
+            '蒸饺': 'dumplings',
+            
+            # 西餐
+            '披萨': 'pizza',
+            '牛排': 'steak',
+            '意面': 'pasta',
+            '意大利面': 'pasta',
+            '提拉米苏': 'tiramisu',
+            '玛格丽特披萨': 'pizza',
+            '意式肉酱面': 'pasta',
+            '意式香肠披萨': 'pizza',
+            
+            # 日式
+            '日式': 'japanese-food',
+            '寿司': 'sushi',
+            '乌冬面': 'udon',
+            '豚骨拉面': 'ramen',
+            '味增拉面': 'ramen',
+            '日式炸鸡': 'japanese-fried-chicken',
+            '天妇罗': 'tempura',
+            '牛肉饭': 'beef-rice',
+            '照烧鸡排饭': 'teriyaki-chicken',
+            '牛丼饭': 'gyudon',
+            '咖喱饭': 'curry-rice',
+            '日式套餐': 'japanese-bento',
+            '味增汤': 'miso-soup',
+            
+            # 粤菜
+            '虾饺': 'shrimp-dumplings',
+            '烧卖': 'shumai',
+            '叉烧包': 'char-siu-bao',
+            '茶点': 'dim-sum',
+            
+            # 其他
+            '黄焖鸡': 'braised-chicken',
+            '黄焖排骨': 'braised-pork',
+            '大盘鸡': 'xinjiang-chicken',
+            '手抓饭': 'pilaf',
+            '剁椒鱼头': 'fish-head',
+            '口味虾': 'spicy-shrimp',
+            '小炒肉': 'stir-fried-pork',
+            '锅包肉': 'sweet-sour-pork',
+            '地三鲜': 'three-delicacies',
+            '西湖醋鱼': 'west-lake-fish',
+            '东坡肉': 'dongpo-pork',
+            '龙井虾仁': 'shrimp',
+            '糖醋里脊': 'sweet-sour-pork',
+            '白切鸡': 'white-cut-chicken',
+            '鸭血粉丝汤': 'duck-blood-soup',
+            '盐水鸭': 'salted-duck',
+            '豆汁': 'beijing-food',
+            '焦圈': 'beijing-food',
+            '驴打滚': 'beijing-snack',
+            '卤肉饭': 'braised-pork-rice',
+            '豆浆': 'soy-milk',
+            '油条': 'youtiao',
+            '莜面': 'noodles',
+            '凉皮': 'liangpi',
+            '鸡汤': 'chicken-soup',
+            '蒸蛋': 'steamed-egg',
+            '小菜': 'side-dish',
+            '蒸排骨': 'steamed-ribs',
+            '蒸鸡': 'steamed-chicken',
         }
         
-        # 尝试匹配关键词
-        keyword_lower = keyword.lower()
-        for dish_name, image_ids in food_image_map.items():
-            if dish_name in keyword or keyword in dish_name:
-                img_id = image_ids[offset % len(image_ids)]
-                return f"https://images.unsplash.com/photo-{img_id}?w=400&h=300&fit=crop&q=80"
+        # 查找匹配的英文关键词
+        search_keyword = 'food'  # 默认关键词
         
-        # 默认使用通用美食图片
-        default_images = [
-            '1565299624946-b28f40a0ae38',
-            '1563379091339-03246963d19a',
-            '1555939594-58d7cb561ad1',
-            '1567620905732-2d1ec7ab7445'
-        ]
-        img_id = default_images[offset % len(default_images)]
-        return f"https://images.unsplash.com/photo-{img_id}?w=400&h=300&fit=crop&q=80"
+        # 先尝试完全匹配
+        if keyword_lower in keyword_mapping:
+            search_keyword = keyword_mapping[keyword_lower]
+        else:
+            # 尝试部分匹配
+            for chinese_keyword, english_keyword in keyword_mapping.items():
+                if chinese_keyword in keyword_lower or keyword_lower in chinese_keyword:
+                    search_keyword = english_keyword
+                    break
+        
+        # 使用Unsplash Source API（随机但相关）
+        # 添加随机参数确保每次获取不同图片
+        import random
+        random_seed = random.randint(1, 1000) + offset * 100
+        
+        return f"https://source.unsplash.com/400x300/?{search_keyword}&sig={random_seed}"
 
