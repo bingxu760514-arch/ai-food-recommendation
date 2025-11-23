@@ -80,11 +80,15 @@ const ChatInterface: React.FC = () => {
       // 检查响应数据
       if (response.data && response.data.message) {
         // 确保餐厅数据包含所有字段（包括图片）
-        const restaurants = (response.data.restaurants || []).map((r: any) => ({
-          ...r,
-          image1: r.image1 || '',
-          image2: r.image2 || ''
-        }));
+        const restaurants = (response.data.restaurants || []).map((r: any) => {
+          console.log('[前端] 接收到的餐厅数据:', r);
+          console.log('[前端] 图片URL - image1:', r.image1, 'image2:', r.image2);
+          return {
+            ...r,
+            image1: r.image1 || '',
+            image2: r.image2 || ''
+          };
+        });
         
         const assistantMessage: Message = {
           role: 'assistant',
@@ -98,6 +102,9 @@ const ChatInterface: React.FC = () => {
       }
     } catch (error: any) {
       console.error('发送消息失败:', error);
+      if (error.response) {
+        console.error('响应数据:', error.response.data);
+      }
       
       // 尝试从错误响应中获取详细错误信息
       let errorMsg = '抱歉，发送消息时出现错误，请稍后重试。';
@@ -169,8 +176,18 @@ const ChatInterface: React.FC = () => {
                                       src={restaurant.image1} 
                                       alt={`${restaurant.name}招牌菜1`}
                                       className="dish-image"
+                                      onLoad={() => {
+                                        console.log('[前端] 图片1加载成功:', restaurant.image1);
+                                      }}
                                       onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        console.error('[前端] 图片1加载失败:', restaurant.image1);
+                                        const img = e.target as HTMLImageElement;
+                                        img.style.display = 'none';
+                                        // 显示占位符
+                                        const placeholder = document.createElement('div');
+                                        placeholder.className = 'image-placeholder';
+                                        placeholder.textContent = '图片加载失败';
+                                        img.parentElement?.appendChild(placeholder);
                                       }}
                                     />
                                   </div>
@@ -181,8 +198,18 @@ const ChatInterface: React.FC = () => {
                                       src={restaurant.image2} 
                                       alt={`${restaurant.name}招牌菜2`}
                                       className="dish-image"
+                                      onLoad={() => {
+                                        console.log('[前端] 图片2加载成功:', restaurant.image2);
+                                      }}
                                       onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        console.error('[前端] 图片2加载失败:', restaurant.image2);
+                                        const img = e.target as HTMLImageElement;
+                                        img.style.display = 'none';
+                                        // 显示占位符
+                                        const placeholder = document.createElement('div');
+                                        placeholder.className = 'image-placeholder';
+                                        placeholder.textContent = '图片加载失败';
+                                        img.parentElement?.appendChild(placeholder);
                                       }}
                                     />
                                   </div>

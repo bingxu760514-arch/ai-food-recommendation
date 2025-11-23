@@ -516,6 +516,9 @@ class RecommendationEngine:
         # 优先根据招牌菜匹配图片
         dish_keywords = self._extract_dish_keywords(signature_dish)
         
+        # 调试信息
+        print(f"[图片生成] 餐厅: {restaurant.get('name')}, 招牌菜: {signature_dish}, 关键词: {dish_keywords}")
+        
         # 根据招牌菜关键词匹配图片（覆盖原有图片）
         if dish_keywords:
             if len(dish_keywords) >= 2:
@@ -528,10 +531,16 @@ class RecommendationEngine:
                 restaurant['image2'] = self._get_food_image_url(dish_keywords[0], 1)
         else:
             # 如果没有招牌菜信息，使用默认图片
-            if not restaurant.get('image1'):
-                restaurant['image1'] = self._get_food_image_url('food', 0)
-            if not restaurant.get('image2'):
-                restaurant['image2'] = self._get_food_image_url('food', 1)
+            restaurant['image1'] = self._get_food_image_url('food', 0)
+            restaurant['image2'] = self._get_food_image_url('food', 1)
+        
+        # 确保图片URL不为空
+        if not restaurant.get('image1'):
+            restaurant['image1'] = self._get_food_image_url('food', 0)
+        if not restaurant.get('image2'):
+            restaurant['image2'] = self._get_food_image_url('food', 1)
+        
+        print(f"[图片生成] 生成的图片URL: image1={restaurant.get('image1')}, image2={restaurant.get('image2')}")
         
         return restaurant
     
@@ -697,31 +706,73 @@ class RecommendationEngine:
                     search_keyword = english_keyword
                     break
         
-        # 使用Unsplash图片（通过图片ID或搜索）
-        # 为常见菜品提供高质量的图片ID
+        # 使用可靠的图片服务 - 使用food相关的Unsplash图片
+        # 为常见菜品提供高质量的图片URL
         quality_image_map = {
-            'hotpot': ['1585937421922-0c7881b2b1e9', '1574781336247-1ba0b31921af', '1603105037880-4c5c5c5c5c5c'],
-            'barbecue': ['1574781336247-1ba0b31921af', '1558030006-4507d4783a7c', '1603105037880-4c5c5c5c5c5c'],
-            'korean-barbecue': ['1574781336247-1ba0b31921af', '1558030006-4507d4783a7c'],
-            'peking-duck': ['1585036156179-8a1c6a9c3c8a', '1567423387842-d6813a71bfa9'],
-            'ramen': ['1565299624946-b28f40a0ae38', '1555939594-58d7cb561ad1'],
-            'dumplings': ['1563379091339-03246963d19a', '1565299624946-b28f40a0ae38'],
-            'pizza': ['1567620905732-2d1ec7ab7445', '1555939594-58d7cb561ad1'],
-            'steak': ['1565299624946-b28f40a0ae38', '1555939594-58d7cb561ad1'],
-            'pasta': ['1567620905732-2d1ec7ab7445', '1555939594-58d7cb561ad1'],
-            'sushi': ['1565299624946-b28f40a0ae38', '1555939594-58d7cb561ad1'],
-            'dim-sum': ['1555939594-58d7cb561ad1', '1567620905732-2d1ec7ab7445'],
+            'hotpot': [
+                'https://picsum.photos/seed/hotpot1/400/300',
+                'https://picsum.photos/seed/hotpot2/400/300',
+                'https://picsum.photos/seed/hotpot3/400/300'
+            ],
+            'barbecue': [
+                'https://picsum.photos/seed/barbecue1/400/300',
+                'https://picsum.photos/seed/barbecue2/400/300',
+                'https://picsum.photos/seed/barbecue3/400/300'
+            ],
+            'korean-barbecue': [
+                'https://picsum.photos/seed/korean1/400/300',
+                'https://picsum.photos/seed/korean2/400/300'
+            ],
+            'peking-duck': [
+                'https://picsum.photos/seed/duck1/400/300',
+                'https://picsum.photos/seed/duck2/400/300'
+            ],
+            'ramen': [
+                'https://picsum.photos/seed/ramen1/400/300',
+                'https://picsum.photos/seed/ramen2/400/300'
+            ],
+            'dumplings': [
+                'https://picsum.photos/seed/dumpling1/400/300',
+                'https://picsum.photos/seed/dumpling2/400/300'
+            ],
+            'pizza': [
+                'https://picsum.photos/seed/pizza1/400/300',
+                'https://picsum.photos/seed/pizza2/400/300'
+            ],
+            'steak': [
+                'https://picsum.photos/seed/steak1/400/300',
+                'https://picsum.photos/seed/steak2/400/300'
+            ],
+            'pasta': [
+                'https://picsum.photos/seed/pasta1/400/300',
+                'https://picsum.photos/seed/pasta2/400/300'
+            ],
+            'sushi': [
+                'https://picsum.photos/seed/sushi1/400/300',
+                'https://picsum.photos/seed/sushi2/400/300'
+            ],
+            'dim-sum': [
+                'https://picsum.photos/seed/dimsum1/400/300',
+                'https://picsum.photos/seed/dimsum2/400/300'
+            ],
+            'food': [
+                'https://picsum.photos/seed/food1/400/300',
+                'https://picsum.photos/seed/food2/400/300',
+                'https://picsum.photos/seed/food3/400/300',
+                'https://picsum.photos/seed/food4/400/300'
+            ],
         }
         
-        # 如果找到对应的图片ID，使用它
+        # 如果找到对应的图片URL，使用它
         if search_keyword in quality_image_map:
-            img_ids = quality_image_map[search_keyword]
-            img_id = img_ids[offset % len(img_ids)]
-            return f"https://images.unsplash.com/photo-{img_id}?w=400&h=300&fit=crop&q=80"
+            img_urls = quality_image_map[search_keyword]
+            img_url = img_urls[offset % len(img_urls)]
+            return img_url
         
-        # 否则使用Unsplash搜索API（需要API key，这里使用公开的搜索URL）
-        # 使用picsum.photos作为备选（高质量随机图片）
-        import random
-        random_id = random.randint(1, 1000) + offset * 100
-        return f"https://picsum.photos/400/300?random={random_id}"
+        # 否则使用默认的美食图片
+        default_images = quality_image_map.get('food', [
+            'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1563379091339-03246963d19a?w=400&h=300&fit=crop&q=80'
+        ])
+        return default_images[offset % len(default_images)]
 
